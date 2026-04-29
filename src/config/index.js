@@ -77,13 +77,7 @@ export const config  = {
         // Landing页面多语言标语
         landingText: {
             'zh-CN': '探索全球网络无限可能',
-            'vi-VN': 'Khám phá khả năng vô hạn của mạng toàn cầu',
-            'en-US': 'Explore Unlimited Possibilities of Global Network',
-            'zh-TW': '探索全球網絡無限可能',
-            'ja-JP': 'グローバルネットワークの無限の可能性',
-            'ko-KR': '글로벌 네트워크의 무한한 가능성을 탐색하세요',
-            'ru-RU': 'Исследуйте безграничные возможности глобальной сети',
-            'fa-IR': 'امکانات نامحدود شبکه جهانی را کاوش کنید'
+            'en-US': 'Explore Unlimited Possibilities of Global Network'
         },
 
         // 自定义landing页面路径（相对于public目录
@@ -269,7 +263,7 @@ export const config  = {
         // ===============================
 
         // 是否显示在线设备数量限制 (true=显示, false=隐藏，仅Xiao-V2board支持)
-        showOnlineDevicesLimit: true,
+        showOnlineDevicesLimit: false,
         
         // 是否显示导入订阅
         showImportSubscription: true,
@@ -291,7 +285,7 @@ export const config  = {
         thirdPartyClient: {
             enabled: true,
             // 点击“三方客户端”按钮后打开的链接
-            downloadUrl: 'https://github.com'
+            downloadUrl: 'https://github.com/chen08209/FlClash/releases/tag/v0.8.92'
         },
 
         // 订阅导入客户端显示控制 部分面板不支持SingBox导入请您注意检查
@@ -343,7 +337,7 @@ export const config  = {
         showGiftCardRedeem: true, // 只有Xiao-V2board支持礼品卡兑换
 
         // 是否显示最近登录设备栏目 (true=显示, false=隐藏)
-        showRecentDevices: true
+        showRecentDevices: false
     },
 
     // =======================================================
@@ -418,10 +412,10 @@ export const config  = {
         autoCheckPayment: true, // 默认启用
 
         // 自动检测支付状态的间隔时间 (毫秒)
-        autoCheckInterval: 5000, // 默认5秒
+        autoCheckInterval: 3000, // 推荐3秒
 
         // 自动检测支付状态的最大次数 (设置为0表示无限次)
-        autoCheckMaxTimes: 60, // 默认60次
+        autoCheckMaxTimes: 40, // 推荐40次（总时长约2分钟）
 
         // 是否对Safari浏览器使用支付弹窗模式，而不是直接跳转 (true=使用弹窗, false=直接跳转)
         useSafariPaymentModal: true, // 默认开启
