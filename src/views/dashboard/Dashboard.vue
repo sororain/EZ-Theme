@@ -76,7 +76,7 @@
             <div class="notice-item" v-if="notices.data[currentNoticeIndex]" :key="currentNoticeIndex">
               <div class="notice-title">{{ notices.data[currentNoticeIndex].title }}</div>
               <div class="notice-footer">
-                <div class="notice-date">{{ formatDate(notices.data[currentNoticeIndex].created_at) }}</div>
+                <div class="notice-date">{{ formatDate(notices.data[currentNoticeIndex].updated_at) }}</div>
                 <div class="notice-nav">
                   <button
                       class="btn-notice"
