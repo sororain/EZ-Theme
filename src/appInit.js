@@ -7,7 +7,6 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 import i18n from './i18n';
-import { MotionPlugin } from '@vueuse/motion';
 import { useToast } from './composables/useToast';
 import initPageTitle from './utils/exposeConfig';
 import { handleUnauthorizedDomain } from './utils/domainChecker';
@@ -16,6 +15,50 @@ import { handleUnauthorizedDomain } from './utils/domainChecker';
 if (!handleUnauthorizedDomain()) {
   throw new Error('Unauthorized domain');
 }
+
+const hideAppPreloader = () => {
+  if (!window.__SHOW_APP_PRELOADER__) {
+    return;
+  }
+
+  const preloader = document.getElementById('app-preloader');
+
+  document.documentElement.classList.remove('preloader-active');
+
+  if (!preloader) {
+    return;
+  }
+
+  preloader.classList.add('preloader-exit');
+  window.setTimeout(() => {
+    preloader.remove();
+  }, 320);
+};
+
+const showAppPreloaderError = () => {
+  if (!window.__SHOW_APP_PRELOADER__) {
+    return;
+  }
+
+  const preloader = document.getElementById('app-preloader');
+
+  document.documentElement.classList.remove('preloader-active');
+
+  if (!preloader) {
+    return;
+  }
+
+  const title = preloader.querySelector('.app-preloader__title');
+  const text = preloader.querySelector('.app-preloader__text');
+
+  if (title) {
+    title.textContent = 'Load Failed';
+  }
+
+  if (text) {
+    text.textContent = '页面加载失败，请刷新重试';
+  }
+};
 
 const initApp = async () => {
   try {
@@ -31,13 +74,18 @@ const initApp = async () => {
 
     app.use(router)
        .use(store)
-       .use(i18n)
-       .use(MotionPlugin);
+       .use(i18n);
 
     app.mount('#app');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        hideAppPreloader();
+      });
+    });
 
     store.dispatch('initUserInfo');
   } catch (error) {
+    showAppPreloaderError();
     console.error('应用初始化失败:', error);
   }
 };

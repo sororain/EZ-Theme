@@ -86,6 +86,12 @@ export const config  = {
         customLandingPage: ''
     },
 
+    // 右键菜单配置
+    CONTEXT_MENU_CONFIG: {
+        // 刷新按钮文案（留空则使用当前语言的默认文案）
+        refreshText: ''
+    },
+
     // 默认语言和主题配置
     DEFAULT_CONFIG: {
         // 默认语言 ('zh-CN' 或 'en-US')
@@ -107,7 +113,7 @@ export const config  = {
         // none: 纯净背景（性能最佳）
         // light: 轻量渐变背景（推荐）
         // full: 强化渐变背景（视觉更明显）
-        mode: 'none'
+        mode: 'light'
     },
 
     // 认证页面功能配置
@@ -233,7 +239,7 @@ export const config  = {
     // 仪表盘页面配置
     DASHBOARD_CONFIG: {
         // 是否在欢迎卡片中显示用户邮箱 (true=显示, false=隐藏)
-        showUserEmail: true,
+        showUserEmail: false,
 
         // 是否为导入订阅按钮添加高光效果和填充底色 (true=添加效果, false=不添加效果)
         importButtonHighlightBtnbgcolor: true,
@@ -468,8 +474,8 @@ export const config  = {
             '360': true,     // 360浏览器
             'QQ': true,      // QQ浏览器
             'WeChat': true,  // 微信内置浏览器
-            'Baidu': true,   // 百度浏览器
-            'Sogou': true,   // 搜狗浏览器
+            'Baidu': false,   // 百度浏览器
+            'Sogou': false,   // 搜狗浏览器
             'UC': false,     // UC浏览器
             'Maxthon': false // 傲游浏览器
         },

@@ -1,257 +1,177 @@
 ﻿<template>
-  <transition name="context-menu">
-    <div 
-      v-if="show" 
-      class="custom-context-menu" 
-      :style="{ top: position.y + 'px', left: position.x + 'px' }"
-      @click.stop
-    >
-      <div class="menu-items">
-        <div class="menu-item" @click="handleCopy" v-if="canCopy">
-          <div class="menu-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </div>
-          <div class="menu-text">{{ $t('contextMenu.copy') }}</div>
-        </div>
-        <div class="menu-divider" v-if="canCopy && (canRefresh || canNavigate)"></div>
-        <div class="menu-item" @click="handleRefresh">
-          <div class="menu-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 4v6h-6"></path>
-              <path d="M1 20v-6h6"></path>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-          </div>
-          <div class="menu-text">{{ $t('contextMenu.refresh') }}</div>
-        </div>
-        <div class="menu-item" @click="handleBack">
-          <div class="menu-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 12H5"></path>
-              <path d="M12 19l-7-7 7-7"></path>
-            </svg>
-          </div>
-          <div class="menu-text">{{ $t('contextMenu.back') }}</div>
-        </div>
-        <div class="menu-item" @click="handleForward">
-          <div class="menu-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"></path>
-              <path d="M12 5l7 7-7 7"></path>
-            </svg>
-          </div>
-          <div class="menu-text">{{ $t('contextMenu.forward') }}</div>
-        </div>
-      </div>
-    </div>
-  </transition>
+  <div
+    ref="menuRef"
+    class="custom-context-menu"
+    :class="{ 'ctx-visible': show }"
+    :style="{ top: position.y + 'px', left: position.x + 'px' }"
+    @click.stop
+  >
+    <button type="button" class="custom-context-menu__action" @click="handleRefresh">
+      <span class="custom-context-menu__icon">↻</span>
+      <span>{{ refreshLabel }}</span>
+    </button>
+  </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { CONTEXT_MENU_CONFIG } from '@/utils/baseConfig';
 
 export default {
   name: 'CustomContextMenu',
   setup() {
+    const { t } = useI18n();
     const show = ref(false);
+    const menuRef = ref(null);
     const position = ref({ x: 0, y: 0 });
-    const selectedText = ref('');
-    const router = useRouter();
-    
-    const canCopy = ref(false);
-    const canRefresh = ref(true);
-    const canNavigate = ref(true);
-    
-    const handleContextMenu = (event) => {
-      event.preventDefault();
-      
-      const selection = window.getSelection();
-      selectedText.value = selection.toString();
-      canCopy.value = selection.toString().length > 0;
-      
-      const x = Math.min(event.clientX, window.innerWidth - 200);
-      const y = Math.min(event.clientY, window.innerHeight - 160);
-      
+    const menuMargin = 8;
+    const refreshLabel = computed(() => {
+      const text = CONTEXT_MENU_CONFIG.refreshText;
+      return typeof text === 'string' && text.trim() ? text.trim() : t('contextMenu.refresh');
+    });
+
+    const hideMenu = () => {
+      show.value = false;
+    };
+
+    const placeMenuWithViewportBoundary = (event) => {
+      const menuEl = menuRef.value;
+      if (!menuEl) return;
+
+      const menuWidth = menuEl.offsetWidth;
+      const menuHeight = menuEl.offsetHeight;
+      let x = event.clientX;
+      let y = event.clientY;
+
+      if (x + menuWidth > window.innerWidth) {
+        x = Math.max(menuMargin, window.innerWidth - menuWidth - menuMargin);
+      }
+      if (y + menuHeight > window.innerHeight) {
+        y = Math.max(menuMargin, window.innerHeight - menuHeight - menuMargin);
+      }
+
       position.value = { x, y };
+    };
+
+    const handleContextMenu = async (event) => {
+      event.preventDefault();
+
+      show.value = false;
+      await nextTick();
+
+      position.value = { x: -9999, y: -9999 };
       show.value = true;
-      
-      setTimeout(() => {
-        const menuItems = document.querySelectorAll('.menu-item');
-        menuItems.forEach((item, index) => {
-          setTimeout(() => {
-            item.classList.add('appear');
-          }, index * 50);
-        });
-      }, 50);
+      await nextTick();
+
+      placeMenuWithViewportBoundary(event);
     };
-    
-    const handleClickOutside = () => {
-      if (show.value) {
-        show.value = false;
-        
-        const menuItems = document.querySelectorAll('.menu-item');
-        menuItems.forEach(item => {
-          item.classList.remove('appear');
-        });
-      }
-    };
-    
-    const handleCopy = async () => {
-      try {
-        if (selectedText.value) {
-          await navigator.clipboard.writeText(selectedText.value);
-        }
-      } catch (err) {
-        console.error('复制失败:', err);
-      }
-      handleClickOutside();
-    };
-    
+
     const handleRefresh = () => {
+      hideMenu();
       window.location.reload();
     };
-    
-    const handleBack = () => {
-      router.back();
-      handleClickOutside();
-    };
-    
-    const handleForward = () => {
-      router.forward();
-      handleClickOutside();
-    };
-    
+
     onMounted(() => {
       document.addEventListener('contextmenu', handleContextMenu);
-      document.addEventListener('click', handleClickOutside);
-      window.addEventListener('resize', handleClickOutside);
-      window.addEventListener('scroll', handleClickOutside);
+      document.addEventListener('click', hideMenu);
+      document.addEventListener('scroll', hideMenu, true);
+      window.addEventListener('resize', hideMenu);
+      window.addEventListener('blur', hideMenu);
     });
-    
+
     onUnmounted(() => {
       document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('click', handleClickOutside);
-      window.removeEventListener('resize', handleClickOutside);
-      window.removeEventListener('scroll', handleClickOutside);
+      document.removeEventListener('click', hideMenu);
+      document.removeEventListener('scroll', hideMenu, true);
+      window.removeEventListener('resize', hideMenu);
+      window.removeEventListener('blur', hideMenu);
     });
-    
+
     return {
       show,
+      menuRef,
       position,
-      canCopy,
-      canRefresh,
-      canNavigate,
-      handleCopy,
-      handleRefresh,
-      handleBack,
-      handleForward
+      refreshLabel,
+      handleRefresh
     };
   }
 };
 </script>
 
 <style lang="scss" scoped>
+@keyframes ctx-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .custom-context-menu {
   position: fixed;
-  z-index: 1000;
-  min-width: 180px;
-  background-color: rgba(var(--card-background-rgb), 0.6);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(var(--theme-color-rgb), 0.1);
-  padding: 8px;
+  z-index: 99999;
+  width: max-content;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  background: rgba(235, 243, 255, 0.3);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.2), 0 2px 6px rgba(0, 0, 0, 0.07);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  padding: 4px 0;
+  display: none;
   transform-origin: top left;
+  overflow: hidden;
 }
 
-.menu-items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.custom-context-menu.ctx-visible {
+  display: block;
+  animation: ctx-in 0.15s cubic-bezier(0.2, 0.9, 0.4, 1) both;
 }
 
-.menu-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  opacity: 0;
-  transform: translateY(10px);
-  
-  &.appear {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  &:hover {
-    background-color: rgba(var(--theme-color-rgb), 0.1);
-    
-    .menu-icon {
-      color: var(--theme-color);
-      transform: scale(1.1);
-    }
-  }
-  
-  &:active {
-    background-color: rgba(var(--theme-color-rgb), 0.2);
-    transform: scale(0.98);
-  }
-}
-
-.menu-divider {
-  height: 1px;
-  background-color: rgba(var(--theme-color-rgb), 0.1);
-  margin: 4px 0;
-}
-
-.menu-icon {
+.custom-context-menu__action {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  margin-right: 12px;
-  background-color: rgba(var(--theme-color-rgb), 0.08);
-  color: var(--text-color);
-  transition: all 0.3s ease;
-}
-
-.menu-text {
-  font-size: 14px;
+  justify-content: flex-start;
+  gap: 7px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  border-radius: 6px;
+  margin: 0 4px;
+  width: calc(100% - 8px);
+  padding: 6px 12px 6px 10px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-color);
+  color: #1e293b;
+  text-align: left;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-
-.context-menu-enter-active,
-.context-menu-leave-active {
-  transition: transform 0.2s ease, opacity 0.2s ease;
+.custom-context-menu__action:hover,
+.custom-context-menu__action:focus {
+  background: rgba(148, 182, 233, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(148, 182, 233, 0.3);
+  color: #0f172a;
 }
 
-.context-menu-enter-from,
-.context-menu-leave-to {
-  transform: scale(0.95);
-  opacity: 0;
+.custom-context-menu__action:active {
+  background: rgba(148, 182, 233, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(148, 182, 233, 0.4);
+  color: #0f172a;
 }
 
-
-:deep(.dark-theme) {
-  .custom-context-menu {
-    background-color: rgba(30, 30, 32, 0.8);
-    border-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  .menu-icon {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
+.custom-context-menu__icon {
+  font-size: 14px;
+  opacity: 0.7;
+  line-height: 1;
 }
-</style> 
+</style>

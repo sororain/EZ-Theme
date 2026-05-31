@@ -36,11 +36,7 @@
 
     <!-- 路由视图只对内容部分应用过渡效果 -->
     <router-view v-slot="{ Component, route }">
-      <transition 
-        name="page-transition" 
-        mode="out-in"
-        appear
-      >
+      <transition name="page-transition">
         <keep-alive :include="cachedRoutes" :max="5">
           <component 
             :is="Component" 
@@ -55,7 +51,7 @@
     <Toast />
     
     <!-- 返回顶部按钮 -->
-    <BackToTop />
+    <BackToTop v-if="deferredUiReady" />
     
     <!-- 自定义鼠标右键菜单 -->
     <CustomContextMenu />
@@ -64,10 +60,10 @@
     <CustomerServiceIcon v-if="$route.path !== '/customer-service'" />
     
     <!-- Crisp嵌入组件（第二种客服系统方案） -->
-    <CrispEmbed v-if="customerServiceConfig.embedMode === 'embed'" />
+    <CrispEmbed v-if="deferredUiReady && customerServiceConfig.embedMode === 'embed'" />
     
     <!-- 资源预加载组件 -->
-    <ResourcePreloader />
+    <ResourcePreloader v-if="deferredUiReady" />
     
     <!-- SVG图标定义 -->
     <IconDefinitions />
@@ -75,7 +71,7 @@
 </template>
 
 <script>
-import { onMounted, onUnmounted, ref, computed, provide, watch } from 'vue';
+import { onMounted, onUnmounted, ref, computed, provide, watch, defineAsyncComponent } from 'vue';
 import { useStore } from 'vuex';
 import { useTheme } from '@/composables/useTheme';
 import { useRouter, useRoute } from 'vue-router';
@@ -85,19 +81,20 @@ import { checkUserLoginStatus } from '@/api/auth';
 import { handleRedirectPath } from '@/utils/redirectHandler';
 import Toast from '@/components/common/Toast.vue';
 import IconDefinitions from '@/components/icons/IconDefinitions.vue';
-import SlideTabsNav from '@/components/common/SlideTabsNav.vue';
 import ThemeToggle from '@/components/common/ThemeToggle.vue';
 import LanguageSelector from '@/components/common/LanguageSelector.vue';
-import UserAvatar from '@/components/common/UserAvatar.vue';
-import BackToTop from '@/components/common/BackToTop.vue';
-import CustomContextMenu from '@/components/common/CustomContextMenu.vue';
-import CustomerServiceIcon from '@/components/common/CustomerServiceIcon.vue';
-import CrispEmbed from '@/components/common/CrispEmbed.vue';
-import ResourcePreloader from '@/components/common/ResourcePreloader.vue';
 import { IconGift } from '@tabler/icons-vue';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import pageCache from '@/utils/pageCache';
+
+const SlideTabsNav = defineAsyncComponent(() => import('@/components/common/SlideTabsNav.vue'));
+const UserAvatar = defineAsyncComponent(() => import('@/components/common/UserAvatar.vue'));
+const BackToTop = defineAsyncComponent(() => import('@/components/common/BackToTop.vue'));
+const CustomContextMenu = defineAsyncComponent(() => import('@/components/common/CustomContextMenu.vue'));
+const CustomerServiceIcon = defineAsyncComponent(() => import('@/components/common/CustomerServiceIcon.vue'));
+const CrispEmbed = defineAsyncComponent(() => import('@/components/common/CrispEmbed.vue'));
+const ResourcePreloader = defineAsyncComponent(() => import('@/components/common/ResourcePreloader.vue'));
 
 NProgress.configure({ 
   showSpinner: false,  // 关闭旋转图标，减少路由切换时的 GPU 合成层
@@ -129,8 +126,42 @@ export default {
     const { applyTheme } = useTheme();
     const siteConfig = ref(SITE_CONFIG);
     const cachedRoutes = computed(() => pageCache.getCachedRoutes());
+    const deferredUiReady = ref(!!route.meta.requiresAuth);
+    const isLoggedIn = computed(() => store.getters.isLoggedIn);
+    const timeoutIds = [];
+    const idleCallbackIds = [];
     
     const customerServiceConfig = computed(() => CUSTOMER_SERVICE_CONFIG);
+
+    const scheduleTimeout = (callback, delay) => {
+      const timerId = window.setTimeout(callback, delay);
+      timeoutIds.push(timerId);
+      return timerId;
+    };
+
+    const scheduleWhenIdle = (callback, timeout = 1500) => {
+      if (window.requestIdleCallback) {
+        const idleId = window.requestIdleCallback(callback, { timeout });
+        idleCallbackIds.push(idleId);
+        return idleId;
+      }
+
+      return scheduleTimeout(callback, Math.min(timeout, 800));
+    };
+
+    const markDeferredUiReady = () => {
+      deferredUiReady.value = true;
+    };
+
+    const scheduleDeferredUiMount = () => {
+      if (deferredUiReady.value) return;
+
+      scheduleTimeout(() => {
+        scheduleWhenIdle(() => {
+          markDeferredUiReady();
+        }, 2200);
+      }, 1200);
+    };
     
     router.beforeEach((to, from, next) => {
       if (to.meta.keepAlive && to.name) {
@@ -190,21 +221,33 @@ export default {
         }, 300);
       }, 0);
     };
+
+    const runLoginStatusCheck = () => {
+      checkUserLoginStatus().then(result => {
+        if (result.isLoggedIn === false && result.message) {
+          const { showToast } = require('@/composables/useToast').useToast();
+          if (showToast) {
+            showToast(result.message, 'warning');
+          }
+        }
+      }).catch(err => {
+        console.error('检查登录状态出错:', err);
+      });
+    };
+
+    const runSessionBootstrap = () => {
+      if (isLoggedIn.value || route.meta.requiresAuth) {
+        checkAuthAndReloadMessages();
+      }
+
+      runLoginStatusCheck();
+    };
     
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        checkAuthAndReloadMessages();
-        
-        checkUserLoginStatus().then(result => {
-          if (result.isLoggedIn === false && result.message) {
-            const { showToast } = require('@/composables/useToast').useToast();
-            if (showToast) {
-              showToast(result.message, 'warning');
-            }
-          }
-        }).catch(err => {
-          console.error('检查登录状态出错:', err);
-        });
+        scheduleWhenIdle(() => {
+          runSessionBootstrap();
+        }, 1200);
       }
     };
     
@@ -226,27 +269,35 @@ export default {
       
       applyTheme(store.getters.currentTheme);
       
-      checkAuthAndReloadMessages();
-      
       document.addEventListener('visibilitychange', handleVisibilityChange);
       
-      checkUserLoginStatus().then(result => {
-        if (result.isLoggedIn === false && result.message) {
-          const { showToast } = require('@/composables/useToast').useToast();
-          if (showToast) {
-            showToast(result.message, 'warning');
-          }
-        }
-      }).catch(err => {
-        console.error('检查登录状态出错:', err);
-      });
-      
       handleRedirectParam();
+
+      if (route.meta.requiresAuth) {
+        scheduleTimeout(() => {
+          runSessionBootstrap();
+        }, 180);
+      } else {
+        scheduleWhenIdle(() => {
+          runSessionBootstrap();
+        }, 2200);
+        scheduleDeferredUiMount();
+      }
+    });
+
+    watch(() => route.meta.requiresAuth, (requiresAuth) => {
+      if (requiresAuth && !deferredUiReady.value) {
+        markDeferredUiReady();
+      }
     });
     
     onUnmounted(() => {
       window.removeEventListener('languageChanged', onLanguageChanged);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      timeoutIds.forEach(id => clearTimeout(id));
+      if (window.cancelIdleCallback) {
+        idleCallbackIds.forEach(id => window.cancelIdleCallback(id));
+      }
     });
     
     return {
@@ -255,7 +306,8 @@ export default {
       siteConfig,
       PROFILE_CONFIG,
       cachedRoutes,
-      customerServiceConfig
+      customerServiceConfig,
+      deferredUiReady
     };
   }
 };
@@ -372,7 +424,7 @@ export default {
 
 .page-transition-enter-active,
 .page-transition-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .page-transition-enter-from {

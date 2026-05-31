@@ -753,13 +753,13 @@ export default {
             shareDescription: '我正在使用这个服务，推荐您也来体验'
         },
         records: {
-            title: '返佣记录',
+            title: '佣金发放记录',
             empty: '暂无返佣记录',
             date: '时间',
             commission: '佣金',
             details: '详情',
             user: '用户',
-            registerTime: '注册时间',
+            registerTime: '发放时间',
             amount: '消费金额',
             userPlaceholder: '用户',
             noRecords: '您还没有邀请记录，生成邀请码并分享给朋友吧！',

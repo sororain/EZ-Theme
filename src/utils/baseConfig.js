@@ -217,6 +217,14 @@ const DEFAULT_SITE_CONFIG = {
 
 export const SITE_CONFIG = mergeDeep(DEFAULT_SITE_CONFIG, getConfig('SITE_CONFIG'));
 
+// 右键菜单配置
+const DEFAULT_CONTEXT_MENU_CONFIG = {
+    // 右键菜单刷新按钮文本（为空时使用国际化文案）
+    refreshText: ''
+};
+
+export const CONTEXT_MENU_CONFIG = mergeDeep(DEFAULT_CONTEXT_MENU_CONFIG, getConfig('CONTEXT_MENU_CONFIG'));
+
 // 默认语言和主题配置
 const DEFAULT_BASE_CONFIG = {
     // 默认语言 ('zh-CN' 或 'en-US') TODO

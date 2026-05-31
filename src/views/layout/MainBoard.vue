@@ -2,11 +2,9 @@
   <div class="main-board">
     <div class="content-area">
       <router-view v-slot="{ Component }">
-        <transition name="content-transition" mode="out-in" appear>
-          <div class="view-wrapper" :key="$route.path">
-            <component :is="Component" />
-          </div>
-        </transition>
+        <div class="view-wrapper" :key="$route.path">
+          <component :is="Component" />
+        </div>
       </router-view>
     </div>
 
@@ -96,17 +94,6 @@ export default {
     radial-gradient(circle at 12% 16%, rgba(var(--theme-color-rgb), 0.18) 0, rgba(var(--theme-color-rgb), 0.08) 34%, transparent 58%),
     radial-gradient(circle at 84% 34%, rgba(167, 71, 254, 0.13) 0, rgba(167, 71, 254, 0.05) 34%, transparent 56%),
     radial-gradient(circle at 52% 86%, rgba(55, 222, 201, 0.13) 0, rgba(55, 222, 201, 0.05) 34%, transparent 56%);
-}
-
-.content-transition-enter-active,
-.content-transition-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.content-transition-enter-from,
-.content-transition-leave-to {
-  opacity: 0;
-  transform: translateY(3px);
 }
 
 @media (max-width: 1024px) {

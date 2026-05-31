@@ -232,17 +232,13 @@
 
 <script>
 
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, defineAsyncComponent } from 'vue';
 
 import { useRouter } from 'vue-router';
 
 import { useI18n } from 'vue-i18n';
 
 import { useToast } from '@/composables/useToast';
-
-import ThemeToggle from '@/components/common/ThemeToggle.vue';
-
-import LanguageSelector from '@/components/common/LanguageSelector.vue';
 
 import IconMail from '@/components/icons/IconMail.vue';
 
@@ -259,18 +255,17 @@ import { login, checkLoginStatus } from '@/api/auth';
 import { validateEmail, validateRequired } from '@/utils/validators';
 
 
-
-import DomainAuthAlert from '@/components/common/DomainAuthAlert.vue';
-
 import { handleTokenLogin, hasVerifyToken } from '@/utils/tokenLogin';
 
 import { AUTH_CONFIG } from '@/utils/baseConfig';
 
-import AuthPopup from '@/components/auth/AuthPopup.vue';
-
 import { shouldShowAuthPopup } from '@/utils/authPopupState';
 
 import { useNavigator } from '@/composables/useNavigator'
+
+const ThemeToggle = defineAsyncComponent(() => import('@/components/common/ThemeToggle.vue'));
+const LanguageSelector = defineAsyncComponent(() => import('@/components/common/LanguageSelector.vue'));
+const AuthPopup = defineAsyncComponent(() => import('@/components/auth/AuthPopup.vue'));
 
 export default {
 
@@ -292,8 +287,6 @@ export default {
 
     IconEyeOff,
 
-    DomainAuthAlert,
-
     AuthPopup
 
   },
@@ -309,6 +302,24 @@ export default {
     const { showToast } = useToast();
 
     const { goTo } = useNavigator()
+    const timeoutIds = [];
+    const idleCallbackIds = [];
+
+    const scheduleTimeout = (callback, delay) => {
+      const timerId = window.setTimeout(callback, delay);
+      timeoutIds.push(timerId);
+      return timerId;
+    };
+
+    const scheduleWhenIdle = (callback, timeout = 1200) => {
+      if (window.requestIdleCallback) {
+        const idleId = window.requestIdleCallback(callback, { timeout });
+        idleCallbackIds.push(idleId);
+        return idleId;
+      }
+
+      return scheduleTimeout(callback, Math.min(timeout, 500));
+    };
 
 
 
@@ -462,10 +473,6 @@ export default {
 
 
 
-      showAuthPopup.value = shouldShowAuthPopup(AUTH_CONFIG.popup);
-
-
-
       try {
 
         if (window._isLoggingOut === true) {
@@ -478,23 +485,22 @@ export default {
 
 
 
-        const loginStatus = checkLoginStatus();
+        scheduleTimeout(() => {
+          const loginStatus = checkLoginStatus();
 
+          if (loginStatus) {
+            console.log('用户已登录，准备跳转到控制面板');
+            showToast(t('auth.alreadyLoggedIn'), 'info');
+            scheduleTimeout(() => {
+              router.push('/dashboard');
+            }, 180);
+            return;
+          }
 
-
-        if (loginStatus) {
-
-          console.log('用户已登录，准备跳转到控制面板');
-
-          showToast(t('auth.alreadyLoggedIn'), 'info');
-
-          setTimeout(() => {
-
-            router.push('/dashboard');
-
-          }, 500);
-
-        }
+          scheduleWhenIdle(() => {
+            showAuthPopup.value = shouldShowAuthPopup(AUTH_CONFIG.popup);
+          }, 1800);
+        }, 120);
 
       } catch (error) {
 

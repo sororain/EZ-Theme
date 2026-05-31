@@ -448,7 +448,7 @@
         </div>
       </div>
       
-      <!-- 邀请记录卡片 -->
+      <!-- 佣金发放记录卡片 -->
       <div class="dashboard-card">
         <div class="card-header">
           <h2 class="card-title">{{ $t('invite.records.title') }}</h2>
@@ -460,43 +460,44 @@
           </div>
         </div>
         <div v-if="loading.inviteDetails" class="card-body skeleton-loading">
-          <div class="skeleton-table">
-            <div class="skeleton-header-row">
-              <div class="skeleton-header-cell"></div>
-              <div class="skeleton-header-cell"></div>
-              <div class="skeleton-header-cell"></div>
-              <div class="skeleton-header-cell"></div>
+            <div class="skeleton-table">
+              <div class="skeleton-header-row">
+                <div class="skeleton-header-cell"></div>
+                <div class="skeleton-header-cell"></div>
+                <div class="skeleton-header-cell"></div>
+              </div>
+              <div v-for="i in 3" :key="i" class="skeleton-row-full">
+                <div class="skeleton-cell"></div>
+                <div class="skeleton-cell"></div>
+                <div class="skeleton-cell"></div>
+              </div>
             </div>
-            <div v-for="i in 3" :key="i" class="skeleton-row-full">
-              <div class="skeleton-cell"></div>
-              <div class="skeleton-cell"></div>
-              <div class="skeleton-cell"></div>
-              <div class="skeleton-cell"></div>
-            </div>
-          </div>
         </div>
         <div v-else class="card-body">
           <div class="records-table-wrapper">
             <template v-if="inviteRecords.length > 0">
             <table class="records-table">
+              <colgroup>
+                <col class="records-col-time">
+                <col class="records-col-status">
+                <col class="records-col-commission">
+              </colgroup>
               <thead>
                 <tr>
                   <th>{{ $t('invite.records.registerTime') }}</th>
-                  <th>{{ $t('invite.records.amount') }}</th>
-                  <th>{{ $t('invite.records.commission') }}</th>
-                  <th>{{ $t('invite.records.status.title') }}</th>
+                  <th class="table-col-status">{{ $t('invite.records.status.title') }}</th>
+                  <th class="table-col-commission">{{ $t('invite.records.commission') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="record in paginatedRecords" :key="record.id">
                     <td>{{ formatDate(record.created_at) }}</td>
-                    <td>{{ currencySymbol }}{{ record.amount || '0.00' }}</td>
-                    <td>{{ currencySymbol }}{{ record.commission_amount }}</td>
-                    <td>
+                    <td class="table-col-status">
                       <span class="status-badge" :class="record.commission_status === 1 ? 'confirmed' : 'pending'">
                         {{ record.commission_status === 1 ? $t('invite.records.status.confirmed') : $t('invite.records.status.pending') }}
                       </span>
                     </td>
+                    <td class="table-col-commission">{{ currencySymbol }}{{ record.commission_amount }}</td>
                 </tr>
               </tbody>
             </table>
@@ -1922,6 +1923,19 @@ export default {
     .records-table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
+
+      .records-col-time {
+        width: 36%;
+      }
+
+      .records-col-status {
+        width: 32%;
+      }
+
+      .records-col-commission {
+        width: 32%;
+      }
       
       th, td {
         padding: 15px 20px;
@@ -1965,13 +1979,26 @@ export default {
       }
       
       
-      td:nth-child(2), td:nth-child(3) {
+      .table-col-commission {
+        text-align: right;
+      }
+
+      th.table-col-status,
+      td.table-col-status {
+        text-align: center;
+      }
+
+      td.table-col-status {
+        display: table-cell;
+      }
+
+      td.table-col-commission {
         font-weight: 600;
         font-size: 15px;
       }
       
       
-      td:nth-child(3) {
+      td.table-col-commission {
         color: var(--theme-color);
       }
       
@@ -1979,6 +2006,7 @@ export default {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        margin: 0 auto;
         padding: 6px 10px;
         border-radius: 6px;
         font-size: 13px;
@@ -2013,21 +2041,33 @@ export default {
     }
     
     
-    @media (max-width: 768px) {
-      .records-table {
-        th, td {
-          padding: 12px 15px;
-          font-size: 13px;
+      @media (max-width: 768px) {
+        .records-table {
+          .records-col-time {
+            width: 42%;
+          }
+
+          .records-col-status {
+            width: 29%;
+          }
+
+          .records-col-commission {
+            width: 29%;
+          }
+
+          th, td {
+            padding: 12px 15px;
+            font-size: 13px;
         }
         
-        td:nth-child(2), td:nth-child(3) {
-          font-size: 14px;
-          font-weight: 600;
-        }
-        
-        .status-badge {
-          padding: 4px 8px;
-          font-size: 12px;
+          td.table-col-commission {
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          .status-badge {
+            padding: 4px 8px;
+            font-size: 12px;
           min-width: 70px;
         }
       }

@@ -2322,9 +2322,9 @@ export default {
 
     height: 40px;
 
-    width: auto;
+    width: 100%;
 
-    min-width: 120px;
+    min-width: 0;
 
     display: flex;
 
@@ -2352,7 +2352,7 @@ export default {
 
     margin-top: 12px;
 
-    align-self: flex-start;
+    align-self: stretch;
 
     
 

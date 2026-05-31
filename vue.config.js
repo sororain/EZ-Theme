@@ -4,6 +4,15 @@ const fs = require("fs");
 const webpack = require("webpack");
 const TerserPlugin = require("terser-webpack-plugin");
 const JavaScriptObfuscator = require("javascript-obfuscator");
+const prettier = require("prettier");
+
+const formatHtmlPretty = async (html) => prettier.format(html, {
+  parser: "html",
+  tabWidth: 2,
+  useTabs: false,
+  printWidth: 120,
+  htmlWhitespaceSensitivity: "ignore"
+});
 
 const isProd = process.env.NODE_ENV === "production";
 const enableConfigJS = process.env.VUE_APP_CONFIGJS == "true";
@@ -90,6 +99,26 @@ module.exports = defineConfig({
     }
 
     if (isProd) {
+      config.plugins.push({
+        apply: (compiler) => {
+          compiler.hooks.afterEmit.tapPromise("FormatDistHtmlPlugin", async () => {
+            const htmlPath = path.resolve(compiler.options.output.path, "index.html");
+
+            try {
+              if (!fs.existsSync(htmlPath)) return;
+              const htmlContent = fs.readFileSync(htmlPath, "utf-8");
+              const prettyHtml = await formatHtmlPretty(htmlContent);
+              fs.writeFileSync(htmlPath, prettyHtml, "utf-8");
+              console.log("已自动格式化 dist/index.html");
+            } catch (err) {
+              console.warn("自动格式化 dist/index.html 失败:", err);
+            }
+          });
+        },
+      });
+    }
+
+    if (isProd) {
       config.optimization = {
         ...config.optimization,
         runtimeChunk: "single",
@@ -136,6 +165,8 @@ module.exports = defineConfig({
     if (isProd) {
       const pluginName = "html-index";
       config.plugin(pluginName).tap((args) => {
+        // 关闭生产环境 HTML 压缩，保留打包后 index.html 的可读排版
+        args[0].minify = false;
         args[0].templateParameters = {
           ...args[0].templateParameters,
           injectCustomScript: `

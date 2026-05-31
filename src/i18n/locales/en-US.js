@@ -753,13 +753,13 @@ export default {
             shareDescription: 'I’m using this service and recommend you try it too'
         },
         records: {
-            title: 'Commission Records',
+            title: 'Commission Payout Records',
             empty: 'No commission records',
             date: 'Date',
             commission: 'Commission',
             details: 'Details',
             user: 'User',
-            registerTime: 'Registration Time',
+            registerTime: 'Payout Time',
             amount: 'Spending Amount',
             userPlaceholder: 'User',
             noRecords: 'You have no invite records, generate an invite code and share with friends!',

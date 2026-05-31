@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="dashboard-container">
     <div class="dashboard-inner">
-      <div class="dashboard-card welcome-card" :class="{'card-animate': !loading.userInfo}">
+      <div class="dashboard-card welcome-card" :class="{ 'card-animate': !loading.userInfo }">
         <div class="card-header">
           <h2 class="card-title">{{ $t('dashboard.welcome') }}</h2>
         </div>
@@ -16,8 +16,12 @@
 
       <!-- 通知区域 -->
       <!-- 待处理事项提示 -->
-      <div v-if="hasPendingItems" class="dashboard-card pending-items-card"
-           :class="{'card-animate': !loading.userStats}" style="animation-delay: 0.1s">
+      <div
+        v-if="hasPendingItems"
+        class="dashboard-card pending-items-card"
+        :class="{ 'card-animate': !loading.userStats }"
+        style="animation-delay: 0.06s"
+      >
         <div class="card-header">
           <h2 class="card-title">{{ $t('dashboard.pendingItems') }}</h2>
         </div>
@@ -50,8 +54,12 @@
         </div>
       </div>
 
-      <div class="dashboard-card notice-card" :class="{'card-animate': !loading.notices}"
-           v-if="notices && notices.data && notices.data.length > 0" style="animation-delay: 0.2s">
+      <div
+        class="dashboard-card notice-card"
+        :class="{ 'card-animate': !loading.notices }"
+        v-if="notices && notices.data && notices.data.length > 0"
+        style="animation-delay: 0.1s"
+      >
         <div class="card-header">
           <h2 class="card-title">{{ $t('dashboard.siteAnnouncement') }}</h2>
           <div class="notice-counter">
@@ -122,8 +130,12 @@
       </transition>
 
       <!-- 套餐信息卡片 -->
-      <div v-if="hasPlan" class="dashboard-card subscription-card" :class="{'card-animate': !loading.userInfo}"
-           style="animation-delay: 0.3s">
+      <div
+        v-if="hasPlan"
+        class="dashboard-card subscription-card"
+        :class="{ 'card-animate': !loading.userInfo }"
+        style="animation-delay: 0.14s"
+      >
         <div v-if="loading.userInfo" class="skeleton-card">
           <div class="skeleton-header"></div>
           <div class="skeleton-body">
@@ -467,8 +479,11 @@
 
         <template v-else-if="!hasPlan">
           <!-- 没有套餐时显示的提示卡片 -->
-          <div class="dashboard-card stats-card no-plan-card" :class="{'card-animate': !loading.userStats}"
-               style="animation-delay: 0.5s; grid-column: span 4; margin: 0 auto; max-width: 1200px; width: 100%;">
+          <div
+            class="dashboard-card stats-card no-plan-card"
+            :class="{ 'card-animate': !loading.userStats }"
+            style="grid-column: span 4; margin: 0 auto; max-width: 1200px; width: 100%; animation-delay: 0.22s;"
+          >
             <div class="no-plan-content">
               <div class="no-plan-icon">
                 <IconShoppingCart :size="45" class="icon-cart"/>
@@ -491,13 +506,15 @@
         </template>
 
         <template v-else>
-          <div class="stats-card"
-               :class="{
-              'card-animate': !loading.userStats,
-              'warning-card': isLowTraffic && !isTrafficDepleted,
-              'danger-card': isTrafficDepleted
-            }"
-               style="animation-delay: 0.5s">
+          <div
+            class="stats-card"
+            :class="{
+                'card-animate': !loading.userStats,
+                'warning-card': isLowTraffic && !isTrafficDepleted,
+                'danger-card': isTrafficDepleted
+              }"
+              style="animation-delay: 0.22s"
+          >
             <div class="stats-icon">
               <IconTransferVertical :size="32"/>
             </div>
@@ -509,19 +526,20 @@
             <!-- 水流进度条效果 -->
             <div class="water-container">
               <div class="water-progress"
-                   :class="{'animate-water': waterAnimationState.canAnimate}"
-                   :style="{ height: waterAnimationState.canAnimate ? `${trafficPercentage}%` : '0%' }">
+                   :style="{ height: `${trafficPercentage}%` }">
               </div>
             </div>
           </div>
 
-          <div class="stats-card"
-               :class="{
-              'card-animate': !loading.userStats,
-              'warning-card': isExpiringSoon && !isExpired,
-              'danger-card': isExpired
-            }"
-               style="animation-delay: 0.6s">
+          <div
+            class="stats-card"
+            :class="{
+                'card-animate': !loading.userStats,
+                'warning-card': isExpiringSoon && !isExpired,
+                'danger-card': isExpired
+              }"
+              style="animation-delay: 0.26s"
+          >
             <div class="stats-icon">
               <IconCalendar :size="32"/>
             </div>
@@ -535,11 +553,12 @@
             </div>
           </div>
 
-          <div class="stats-card"
-               :class="{'card-animate': !loading.userStats, 'balance-card': true, 'clickable': isXiaoPanel}"
-               style="animation-delay: 0.7s"
-               @click="isXiaoPanel ? navigateToDeposit() : null"
-               :style="isXiaoPanel ? { cursor: 'pointer' } : {}">
+          <div
+            class="stats-card"
+            :class="{ 'card-animate': !loading.userStats, 'balance-card': true, 'clickable': isXiaoPanel }"
+            @click="isXiaoPanel ? navigateToDeposit() : null"
+            :style="isXiaoPanel ? { cursor: 'pointer', animationDelay: '0.3s' } : { animationDelay: '0.3s' }"
+          >
             <div class="stats-icon">
               <IconWallet :size="32"/>
             </div>
@@ -552,10 +571,12 @@
             </div>
           </div>
 
-          <div class="stats-card doc-card"
-               :class="{'card-animate': !loading.userStats}"
-               @click="openDocumentation"
-               style="animation-delay: 0.8s">
+          <div
+            class="stats-card doc-card"
+            :class="{ 'card-animate': !loading.userStats }"
+            @click="openDocumentation"
+            style="animation-delay: 0.34s"
+          >
             <div class="stats-icon">
               <IconFileText :size="32"/>
             </div>
@@ -571,8 +592,12 @@
       </div>
 
       <!-- 客户端下载区域 -->
-      <div class="dashboard-card download-card" :class="{'card-animate': !loading.userInfo}"
-           v-if="clientConfig.showDownloadCard && showClientCategoryCard" style="animation-delay: 0.9s">
+      <div
+        class="dashboard-card download-card"
+        :class="{ 'card-animate': !loading.userInfo }"
+        v-if="clientConfig.showDownloadCard && showClientCategoryCard"
+        style="animation-delay: 0.38s"
+      >
         <div class="card-header">
           <h2 class="card-title">{{ $t('dashboard.clientDownloads') }}</h2>
         </div>
@@ -942,20 +967,6 @@ export default {
       userPlan: true,
       subscribe: true
     });
-
-    const waterAnimationState = reactive({
-      canAnimate: false,
-      initialized: false
-    });
-
-    watch(() => [loading.userStats, loading.userInfo], ([userStatsLoading, userInfoLoading]) => {
-      if (!userStatsLoading && !userInfoLoading) {
-        setTimeout(() => {
-          waterAnimationState.canAnimate = true;
-          waterAnimationState.initialized = true;
-        }, 500);
-      }
-    }, {immediate: false, flush: 'post'});
 
     watch(() => locale.value, () => {
       if (userPlan.value.isExpireDatePermanent) {
@@ -1961,7 +1972,6 @@ export default {
       showDeviceLimit,
       needRefreshData,
       trafficPercentage,
-      waterAnimationState,
       DASHBOARD_CONFIG,
       allowNewPeriod,
       showImportSubscription,
@@ -1982,11 +1992,13 @@ export default {
   }
 
   .welcome-card {
-    margin-bottom: 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
 
-    .user-email {
-      display: flex;
-      align-items: center;
+      .user-email {
+        display: flex;
+        align-items: center;
       gap: 8px;
       margin-top: 12px;
       padding-top: 8px;
@@ -1997,18 +2009,19 @@ export default {
   }
 
   .dashboard-card {
-    background-color: var(--card-bg-color);
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 20px;
-    margin-bottom: 24px;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+      background-color: var(--card-bg-color);
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
 
-    &:hover {
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      border-color: rgba(var(--theme-color-rgb), 0.3);
-    }
+      &:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        border-color: rgba(var(--theme-color-rgb), 0.3);
+        transform: translateY(-2px);
+      }
 
     .card-header {
       display: flex;
@@ -2030,11 +2043,13 @@ export default {
   }
 
   .subscription-card {
-    margin-bottom: 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
 
-    .subscription-info {
-      display: flex;
-      flex-wrap: wrap;
+      .subscription-info {
+        display: flex;
+        flex-wrap: wrap;
       gap: 20px;
       margin-bottom: 15px;
 
@@ -2132,21 +2147,21 @@ export default {
     }
 
     .stats-card {
-      position: relative;
-      background-color: var(--card-bg-color);
-      border-radius: 16px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 18px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
-      overflow: hidden;
-      border: 1px solid var(--border-color);
+        position: relative;
+        background-color: var(--card-bg-color);
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
 
-      .water-container {
-        position: absolute;
-        left: 0;
+        .water-container {
+          position: absolute;
+          left: 0;
         bottom: 0;
         width: 100%;
         height: 100%;
@@ -2161,13 +2176,9 @@ export default {
         bottom: 0;
         width: 100%;
         background-color: rgba(var(--theme-color-rgb), 0.12);
-        transition: none;
+        transition: height 0.35s ease-out;
         border-radius: 0 0 16px 16px;
         height: 0;
-
-        &.animate-water {
-          transition: height 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
 
         &:after {
           content: '';
@@ -2200,22 +2211,23 @@ export default {
         }
       }
 
-      &:hover {
-        border-color: rgba(var(--theme-color-rgb), 0.3);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      }
+        &:hover {
+          transform: translateY(-3px);
+          border-color: rgba(var(--theme-color-rgb), 0.3);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
 
-      .stats-icon {
+        .stats-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 60px;
-        height: 60px;
-        background-color: rgba(var(--theme-color-rgb), 0.1);
-        border-radius: 12px;
-        margin-right: 15px;
-        color: var(--theme-color);
-      }
+          width: 60px;
+          height: 60px;
+          background-color: rgba(var(--theme-color-rgb), 0.1);
+          border-radius: 12px;
+          margin-right: 15px;
+          color: var(--theme-color);
+        }
 
       .stats-info {
         flex: 1;
@@ -2250,8 +2262,11 @@ export default {
 
 
   .download-card {
-    .card-header {
-      justify-content: center;
+      position: relative;
+      overflow: hidden;
+
+      .card-header {
+        justify-content: center;
 
       .card-title {
         width: 100%;
@@ -2359,7 +2374,9 @@ export default {
 
 
   .notice-card {
-    margin-bottom: 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
 
     .card-header {
       display: flex;
@@ -2373,10 +2390,12 @@ export default {
     }
 
     .notice-item {
-      position: relative;
-      padding: 16px;
-      border-radius: 8px;
-      background-color: rgba(var(--theme-color-rgb), 0.05);
+        position: relative;
+        padding: 16px;
+        border-radius: 8px;
+        background-color: var(--card-bg-color);
+        border: 1px solid rgba(var(--theme-color-rgb), 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 
       .notice-title {
         font-size: 16px;
@@ -2480,7 +2499,9 @@ export default {
 
 
   .pending-items-card {
-    margin-bottom: 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
 
     .pending-items-list {
       display: flex;
@@ -2536,31 +2557,6 @@ export default {
 .skeleton-loading {
   overflow: hidden;
   position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    transform: translateX(-100%);
-    background-image: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0) 0,
-            rgba(255, 255, 255, 0.2) 20%,
-            rgba(255, 255, 255, 0.5) 60%,
-            rgba(255, 255, 255, 0) 100%
-    );
-    animation: shimmer 2s infinite;
-    z-index: 1;
-  }
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
 }
 
 
@@ -2618,32 +2614,28 @@ export default {
       transform: translateY(-1px);
       box-shadow: 0 2px 8px rgba(var(--theme-color-rgb), 0.25);
     }
+  }
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 50%;
-      height: 100%;
-      background: linear-gradient(
-              to right,
-              rgba(255, 255, 255, 0) 0%,
-              rgba(255, 255, 255, 0.2) 50%,
-              rgba(255, 255, 255, 0) 100%
-      );
-      animation: card-shimmer 3s infinite;
-      transform: skewX(-25deg);
+  .card-animate {
+    animation: fadeInUp 0.28s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
-}
 
-@keyframes card-shimmer {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 200%;
+  @media (prefers-reduced-motion: reduce) {
+    .card-animate {
+      animation: none !important;
+    }
   }
 }
 
@@ -2668,7 +2660,7 @@ export default {
 
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.22s ease;
 }
 
 .fade-slide-enter-from {
@@ -2834,15 +2826,6 @@ export default {
   transform: skewX(-25deg);
 }
 
-@keyframes card-shimmer {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 200%;
-  }
-}
-
 
 .btn-active {
   background-color: rgba(var(--theme-color-rgb), 0.1);
@@ -2861,7 +2844,7 @@ export default {
 
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
   will-change: opacity, transform;
   backface-visibility: hidden;
 }
@@ -3273,25 +3256,6 @@ export default {
   border-radius: 16px;
   overflow: hidden;
   position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    transform: translateX(-100%);
-    background-image: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0) 0,
-            rgba(255, 255, 255, 0.2) 20%,
-            rgba(255, 255, 255, 0.5) 60%,
-            rgba(255, 255, 255, 0) 100%
-    );
-    animation: shimmer 2s infinite;
-    z-index: 1;
-  }
 }
 
 
@@ -3394,6 +3358,22 @@ export default {
   );
   animation: shimmer 2s infinite;
   z-index: 1;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes card-shimmer {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 200%;
+  }
 }
 
 .import-action .import-content .import-desc {

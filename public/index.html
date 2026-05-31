@@ -29,6 +29,8 @@
         html, body {
             width: 100%;
             height: 100%;
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
         }
 
         @media (min-width: 769px) {
@@ -51,8 +53,94 @@
             height: 100%;
         }
 
-        html.preloader-active, body.preloader-active {
+        html.preloader-active,
+        html.preloader-active body {
             overflow: hidden !important;
+        }
+
+        #app-preloader {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            background:
+                radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 42%),
+                linear-gradient(180deg, #0f1722 0%, #0b1018 100%);
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            font: 400 16px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
+            text-rendering: geometricPrecision;
+            transition: opacity 0.28s ease, visibility 0.28s ease;
+            contain: layout paint style;
+        }
+
+        html.preloader-active #app-preloader {
+            display: flex;
+        }
+
+        #app-preloader,
+        #app-preloader * {
+            box-sizing: border-box;
+        }
+
+        #app-preloader.preloader-exit {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .app-preloader__content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            padding: 24px;
+            color: rgba(255, 255, 255, 0.92);
+            text-align: center;
+            transform: translateZ(0);
+        }
+
+        .app-preloader__spinner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.16);
+            border-top-color: rgba(255, 255, 255, 0.9);
+            animation: app-preloader-spin 0.9s linear infinite;
+            box-shadow: 0 0 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .app-preloader__title {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            transform: translateZ(0);
+            white-space: nowrap;
+        }
+
+        .app-preloader__text {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.64);
+            letter-spacing: 0.04em;
+            line-height: 1.35;
+            transform: translateZ(0);
+            white-space: nowrap;
+        }
+
+        @keyframes app-preloader-spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
     <!-- 版本号样式 -->
@@ -68,12 +156,40 @@
             z-index: 5;
         }
     </style>
+    <script>
+        (function () {
+            var shouldShowPreloader = true;
+
+            try {
+                if (window.sessionStorage.getItem('ez-theme-first-screen-seen') === '1') {
+                    shouldShowPreloader = false;
+                } else {
+                    window.sessionStorage.setItem('ez-theme-first-screen-seen', '1');
+                }
+            } catch (error) {
+                shouldShowPreloader = true;
+            }
+
+            window.__SHOW_APP_PRELOADER__ = shouldShowPreloader;
+
+            if (shouldShowPreloader) {
+                document.documentElement.classList.add('preloader-active');
+            }
+        })();
+    </script>
 
 </head>
 <body>
+<div id="app-preloader" aria-live="polite">
+    <div class="app-preloader__content">
+        <div class="app-preloader__spinner"></div>
+        <div class="app-preloader__title">Loading</div>
+        <div class="app-preloader__text">页面正在准备中...</div>
+    </div>
+</div>
 <div id="app"></div>
 <!-- built files will be auto injected -->
-<!-- 隐蔽版本号 若不想显示版本号 请注释下方 div 标签-->
-<div class="app-version">✈️</div>
+<!-- 隐藏版本号；若不想显示版本号，请注释下方 div 标签 -->
+<div class="app-version">v0.3.9</div>
 </body>
 </html>
