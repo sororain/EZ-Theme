@@ -159,7 +159,7 @@ export const config  = {
             // 左侧区域内容配置
             leftContent: {
                 // 左侧背景图片URL或路径 (如不设置则不设置图片背景)
-                backgroundImage: 'https://api.horosama.com/random.php',
+                backgroundImage: './images/background.jpg',
 
                 // 左上角网站名称配置
                 siteName: {
