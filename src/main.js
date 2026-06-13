@@ -22,6 +22,14 @@ const enableAntiDebugging = process.env.VUE_APP_DEBUGGING == "true";
     await import('./appInit.js');
   } catch (error) {
     console.error(error);
+    // 兜底：JS 加载失败时隐藏预加载器
+    try {
+      var preloader = document.getElementById('app-preloader');
+      if (preloader && !preloader.classList.contains('preloader-exit')) {
+        preloader.classList.add('preloader-exit');
+        document.documentElement.classList.remove('preloader-active');
+      }
+    } catch (_) {}
   }
 })();
 
