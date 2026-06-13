@@ -22,7 +22,7 @@ export const config  = {
         // API URL获取方式: 'static'=使用静态URL, 'auto'=自动从当前域名获取
         urlMode: 'static',
       
-        // 是否展示后端联通性检测
+        // 是否展示后端联通性检测（false=仅后台静默检测，不跳转验证页）
         showCheckBackend: false,
       
         // 静态URL模式下的基础URL (urlMode = 'static'时使用)
@@ -291,7 +291,7 @@ export const config  = {
         thirdPartyClient: {
             enabled: true,
             // 点击“三方客户端”按钮后打开的链接
-            downloadUrl: 'https://github.com/chen08209/FlClash/releases/tag/v0.8.92'
+            downloadUrl: 'https://github.com/chen08209/FlClash/releases/latest'
         },
 
         // 订阅导入客户端显示控制 部分面板不支持SingBox导入请您注意检查

@@ -655,13 +655,20 @@ router.beforeEach(async (to, from, next) => {
 
   
 
-  const { shouldCheckApiAvailability } = await import('@/utils/apiAvailabilityChecker');
+  const { hasMultipleApiUrls, shouldShowCheckUI, ensureValidApiUrl } = await import('@/utils/apiAvailabilityChecker');
 
-  if (shouldCheckApiAvailability() && to.name !== 'ApiValidation') {
+  // 新会话首次导航时，后台验证/刷新缓存 URL
+  if (hasMultipleApiUrls() && !window.__ez_api_validated) {
+    window.__ez_api_validated = true;
+    ensureValidApiUrl().catch(() => {});
+  }
 
-    const availableUrl = sessionStorage.getItem('ez_api_available_url');
+  // 仅 showCheckBackend=true 且缓存中无可用 URL 时，跳转验证页展示检测过程
+  if (hasMultipleApiUrls() && shouldShowCheckUI() && to.name !== 'ApiValidation') {
 
-    if (!availableUrl) {
+    const cachedUrl = sessionStorage.getItem('ez_api_available_url');
+
+    if (!cachedUrl) {
 
       const apiRedirectQuery = {
 

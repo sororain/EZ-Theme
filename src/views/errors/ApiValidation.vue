@@ -322,14 +322,6 @@ export default {
 
         
 
-        if (window.EZ_CONFIG) {
-
-          window.EZ_CONFIG._AVAILABLE_API_URL = fastestApi.url;
-
-        }
-
-        
-
         setTimeout(() => {
 
           navigateToTarget();
