@@ -17,6 +17,12 @@ if (!handleUnauthorizedDomain()) {
 }
 
 const hideAppPreloader = () => {
+  // 页面加载成功，取消兜底刷新定时器
+  if (window.__ez_preloader_timer) {
+    window.clearTimeout(window.__ez_preloader_timer);
+    window.__ez_preloader_timer = null;
+  }
+
   if (!window.__SHOW_APP_PRELOADER__) {
     return;
   }
@@ -36,6 +42,12 @@ const hideAppPreloader = () => {
 };
 
 const showAppPreloaderError = () => {
+  // 加载失败，取消兜底刷新定时器
+  if (window.__ez_preloader_timer) {
+    window.clearTimeout(window.__ez_preloader_timer);
+    window.__ez_preloader_timer = null;
+  }
+
   if (!window.__SHOW_APP_PRELOADER__) {
     return;
   }

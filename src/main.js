@@ -22,14 +22,34 @@ const enableAntiDebugging = process.env.VUE_APP_DEBUGGING == "true";
     await import('./appInit.js');
   } catch (error) {
     console.error(error);
-    // 兜底：JS 加载失败时隐藏预加载器
-    try {
-      var preloader = document.getElementById('app-preloader');
-      if (preloader && !preloader.classList.contains('preloader-exit')) {
-        preloader.classList.add('preloader-exit');
-        document.documentElement.classList.remove('preloader-active');
+    // JS 加载失败，取消预加载器，之后自动刷新重试
+    if (window.__ez_preloader_timer) {
+      window.clearTimeout(window.__ez_preloader_timer);
+      window.__ez_preloader_timer = null;
+    }
+    // 限制最多重试 2 次，防止无限刷新
+    var retryCount = parseInt(sessionStorage.getItem('ez_reload_count') || '0', 10);
+    if (retryCount < 2) {
+      sessionStorage.setItem('ez_reload_count', String(retryCount + 1));
+      try {
+        var preloader = document.getElementById('app-preloader');
+        if (preloader && !preloader.classList.contains('preloader-exit')) {
+          preloader.classList.add('preloader-exit');
+          document.documentElement.classList.remove('preloader-active');
+          window.setTimeout(function () {
+            preloader.remove();
+            window.location.reload();
+          }, 320);
+        } else {
+          // 预加载器已被移除或已隐藏，直接刷新
+          window.location.reload();
+        }
+      } catch (_) {
+        window.location.reload();
       }
-    } catch (_) {}
+    } else {
+      sessionStorage.removeItem('ez_reload_count');
+    }
   }
 })();
 

@@ -175,8 +175,8 @@
             if (shouldShowPreloader) {
                 document.documentElement.classList.add('preloader-active');
 
-                // 兜底：2秒后自动隐藏预加载器并刷新页面
-                window.setTimeout(function () {
+                // 兜底：5秒后若仍未进入页面，自动隐藏预加载器并刷新
+                window.__ez_preloader_timer = window.setTimeout(function () {
                     var el = document.getElementById('app-preloader');
                     if (el && !el.classList.contains('preloader-exit')) {
                         el.classList.add('preloader-exit');
@@ -186,7 +186,7 @@
                             window.location.reload();
                         }, 320);
                     }
-                }, 2000);
+                }, 5000);
             }
         })();
     </script>
