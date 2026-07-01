@@ -12,6 +12,29 @@ const getRouterInstance = async () => {
 
 const API_CHECK_TIMEOUT = 2000;
 const API_CHECK_PATH = '/guest/comm/config';
+const API_PATH = '/api/v1';
+
+
+/**
+ * 给 URL 拼接 API 路径
+ */
+const resolveApiUrl = (url) => {
+  if (!url) return url;
+  const clean = url.endsWith('/') ? url.slice(0, -1) : url;
+  return `${clean}${API_PATH}`;
+};
+
+
+/**
+ * 解码 base64 字符串
+ */
+const decodeBase64 = (str) => {
+  try {
+    return atob(str);
+  } catch {
+    return str;
+  }
+};
 
 
 /**
@@ -19,7 +42,7 @@ const API_CHECK_PATH = '/guest/comm/config';
  */
 async function quickPingUrl(baseUrl) {
   try {
-    const url = `${baseUrl}${API_CHECK_PATH}`;
+    const url = `${resolveApiUrl(baseUrl)}${API_CHECK_PATH}`;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), API_CHECK_TIMEOUT);
     const response = await fetch(url, { method: 'GET', signal: controller.signal });
@@ -41,7 +64,7 @@ async function findFastestWorkingUrl(urls) {
     urls.map(async (url) => {
       const start = performance.now();
       try {
-        const pingUrl = `${url}${API_CHECK_PATH}`;
+        const pingUrl = `${resolveApiUrl(url)}${API_CHECK_PATH}`;
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), API_CHECK_TIMEOUT);
         const response = await fetch(pingUrl, { method: 'GET', signal: controller.signal });
@@ -70,7 +93,7 @@ function hasMultipleApiUrls() {
   if (window.EZ_CONFIG.API_MIDDLEWARE_ENABLED === true) return false;
   
   const apiConfig = window.EZ_CONFIG.API_CONFIG;
-  if (!apiConfig || apiConfig.urlMode !== 'static') return false;
+  if (!apiConfig) return false;
   
   const staticBaseUrls = apiConfig.staticBaseUrl;
   return Array.isArray(staticBaseUrls) && staticBaseUrls.length > 1;
@@ -94,11 +117,12 @@ function shouldShowCheckUI() {
  */
 function getAvailableApiUrl() {
   const cachedUrl = sessionStorage.getItem('ez_api_available_url');
-  if (cachedUrl) return cachedUrl;
+  if (cachedUrl) return resolveApiUrl(cachedUrl);
 
   if (window.EZ_CONFIG?.API_CONFIG?.staticBaseUrl) {
     const urls = window.EZ_CONFIG.API_CONFIG.staticBaseUrl;
-    return Array.isArray(urls) ? urls[0] : urls;
+    const raw = Array.isArray(urls) ? urls[0] : urls;
+    return resolveApiUrl(decodeBase64(raw));
   }
   return '';
 }
@@ -128,7 +152,10 @@ async function ensureValidApiUrl() {
 
     // 无缓存或缓存失效 → 并发竞速找最快可用地址
     const urls = window.EZ_CONFIG.API_CONFIG.staticBaseUrl;
-    const workingUrl = await findFastestWorkingUrl(urls);
+    const decodedUrls = Array.isArray(urls)
+      ? urls.map(u => decodeBase64(u))
+      : [decodeBase64(urls)];
+    const workingUrl = await findFastestWorkingUrl(decodedUrls);
 
     if (workingUrl) {
       console.log('[API检测] 找到可用URL:', workingUrl);
@@ -136,8 +163,8 @@ async function ensureValidApiUrl() {
       return workingUrl;
     }
 
-    // 全部失败 → 回退到数组第一个
-    const fallback = Array.isArray(urls) ? urls[0] : urls;
+    // 全部失败 → 回退到数组第一个（已解码）
+    const fallback = decodedUrls[0];
     console.warn('[API检测] 全部节点不可用，回退到:', fallback);
     sessionStorage.setItem('ez_api_available_url', fallback);
     return fallback;

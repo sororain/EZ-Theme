@@ -179,7 +179,7 @@ export default {
     dashboard: {
         welcome: '欢迎回来',
         welcomeDesc: '查看您的服务和使用情况',
-        siteAnnouncement: '网站公告',
+        siteAnnouncement: '公告中心',
         subscriptionInfo: '套餐信息',
         planName: '套餐名称',
         expiryDate: '到期时间',

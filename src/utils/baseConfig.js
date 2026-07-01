@@ -4,6 +4,28 @@
 
 import {getAvailableApiUrl} from '@/utils/apiAvailabilityChecker';
 
+const API_PATH = '/api/v1';
+
+/**
+ * 解码 base64 字符串
+ */
+const decodeBase64 = (str) => {
+  try {
+    return atob(str);
+  } catch {
+    return str;
+  }
+};
+
+/**
+ * 给 URL 拼接 API 路径 /api/v1
+ */
+const resolveApiUrl = (url) => {
+  if (!url) return url;
+  const clean = url.endsWith('/') ? url.slice(0, -1) : url;
+  return `${clean}${API_PATH}`;
+};
+
 const getConfig = (key, defaultValue) => {
     if (typeof window !== 'undefined' && window.EZ_CONFIG && window.EZ_CONFIG[key] !== undefined) {
         return window.EZ_CONFIG[key];
@@ -77,7 +99,10 @@ export const getApiBaseUrl = () => {
             const apiConfig = window.EZ_CONFIG.API_CONFIG;
 
             // 静态URL模式
-            if (apiConfig.urlMode === 'static' && apiConfig.staticBaseUrl) {
+            if (apiConfig.staticBaseUrl) {
+                // 解码 base64 编码的 URL
+                const decodeUrl = (url) => decodeBase64(url);
+
                 // 检查是否有经过API可用性检测的URL
                 if (Array.isArray(apiConfig.staticBaseUrl) && apiConfig.staticBaseUrl.length > 1) {
                     // 使用API可用性检测器获取可用的URL
@@ -85,48 +110,19 @@ export const getApiBaseUrl = () => {
                     if (availableUrl) {
                         return availableUrl;
                     }
-                    // 如果没有可用URL，返回数组中的第一个URL
-                    return apiConfig.staticBaseUrl[0];
+                    // 如果没有可用URL，返回数组中的第一个URL（已解码）
+                    return resolveApiUrl(decodeUrl(apiConfig.staticBaseUrl[0]));
                 }
                 // 如果staticBaseUrl是数组但只有一个元素，返回该元素
                 else if (Array.isArray(apiConfig.staticBaseUrl) && apiConfig.staticBaseUrl.length === 1) {
-                    return apiConfig.staticBaseUrl[0];
+                    return resolveApiUrl(decodeUrl(apiConfig.staticBaseUrl[0]));
                 }
-                // 如果staticBaseUrl是字符串，直接返回
+                // 如果staticBaseUrl是字符串，直接返回（已解码）
                 else if (typeof apiConfig.staticBaseUrl === 'string') {
-                    return apiConfig.staticBaseUrl;
+                    return resolveApiUrl(decodeUrl(apiConfig.staticBaseUrl));
                 }
                 // 如果staticBaseUrl不是字符串也不是数组，返回空字符串
                 return '';
-            }
-
-            // 自动获取模式
-            if (apiConfig.urlMode === 'auto' && apiConfig.autoConfig) {
-                try {
-                    const currentUrl = new URL(window.location.href);
-                    let apiBaseUrl = '';
-
-                    // 协议
-                    const protocol = apiConfig.autoConfig.useSameProtocol
-                        ? currentUrl.protocol
-                        : 'https:';
-
-                    // 域名
-                    apiBaseUrl = `${protocol}//${currentUrl.host}`;
-
-                    // API路径
-                    if (apiConfig.autoConfig.appendApiPath && apiConfig.autoConfig.apiPath) {
-                        apiBaseUrl += apiConfig.autoConfig.apiPath;
-                    }
-
-                    return apiBaseUrl;
-                } catch (error) {
-                    console.error('自动获取API URL失败:', error);
-                    // 仅在自动模式失败时回退到静态URL
-                    if (apiConfig.staticBaseUrl) {
-                        return apiConfig.staticBaseUrl;
-                    }
-                }
             }
         }
     }
@@ -216,14 +212,6 @@ const DEFAULT_SITE_CONFIG = {
 };
 
 export const SITE_CONFIG = mergeDeep(DEFAULT_SITE_CONFIG, getConfig('SITE_CONFIG'));
-
-// 右键菜单配置
-const DEFAULT_CONTEXT_MENU_CONFIG = {
-    // 右键菜单刷新按钮文本（为空时使用国际化文案）
-    refreshText: ''
-};
-
-export const CONTEXT_MENU_CONFIG = mergeDeep(DEFAULT_CONTEXT_MENU_CONFIG, getConfig('CONTEXT_MENU_CONFIG'));
 
 // 默认语言和主题配置
 const DEFAULT_BASE_CONFIG = {

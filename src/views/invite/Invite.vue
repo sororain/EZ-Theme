@@ -345,80 +345,20 @@
         </div>
         <div v-else class="card-body">
           <template v-if="inviteCodes.length > 0">
-            <div class="invite-codes-wrapper">
-              <div class="invite-cards-container">
-                <div class="invite-cards-nav prev" @click="prevInviteCode" v-if="inviteCodes.length > 1">
-                  <IconChevronLeft />
+            <div class="invite-codes-list">
+              <div class="invite-code-item" v-for="(code, index) in inviteCodes" :key="code.id || index">
+                <div class="invite-code-info">
+                  <span class="invite-code-label">{{ $t('invite.inviteLink.inviteCode') }} {{ index + 1 }}</span>
+                  <span class="invite-code-text">{{ code.code }}</span>
+                  <span class="invite-code-date">{{ $t('invite.inviteLink.createdAt', { date: formatCodeDate(code.created_at) }) }}</span>
                 </div>
-                
-                <div class="invite-cards-wrapper">
-                  <transition-group name="invite-card" tag="div" class="invite-cards">
-                    <div 
-                      v-for="(code, index) in inviteCodes" 
-                      :key="code.id || 'invite-code-' + index" 
-                      class="invite-card"
-                      :class="{ 'active': selectedCodeIndex === index, 'prev': index < selectedCodeIndex, 'next': index > selectedCodeIndex }"
-                      @click="selectedCodeIndex = index"
-                    >
-                      <div class="invite-card-inner">
-                        <div class="card-shine"></div>
-                        <div class="card-decoration"></div>
-                        
-                        <div class="invite-card-header">
-                          <div class="invite-card-title">
-                            <IconTicket class="card-icon" />
-                            {{ $t('invite.inviteLink.inviteCode') }} {{ index + 1 }}
-                          </div>
-                        </div>
-                        
-                        <div class="invite-card-body">
-                          <div class="invite-code-display">
-                            <span v-for="(char, i) in code.code" :key="i" class="code-char">{{ char }}</span>
-                          </div>
-                        </div>
-                        
-                        <div class="invite-card-footer">
-                          <div class="card-label">{{ $t('invite.inviteLink.scanDescription') }}</div>
-                          <div class="invite-card-date">{{ $t('invite.inviteLink.createdAt', { date: formatCodeDate(code.created_at) }) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </transition-group>
-                </div>
-                
-                <div class="invite-cards-nav next" @click="nextInviteCode" v-if="inviteCodes.length > 1">
-                  <IconChevronRight />
-                </div>
-              </div>
-              
-              <!-- 添加指示器 -->
-              <div class="invite-cards-indicators" v-if="inviteCodes.length > 1">
-                <span 
-                  v-for="(code, index) in inviteCodes" 
-                  :key="code.id"
-                  class="indicator"
-                  :class="{ 'active': selectedCodeIndex === index }"
-                  @click="selectedCodeIndex = index"
-                ></span>
-              </div>
-              
-              <div class="invite-link-wrapper">
-                <div class="input-with-icon">
-                  <IconLink class="input-icon" />
-                  <input 
-                    type="text" 
-                    class="invite-link" 
-                    :value="inviteLink" 
-                    readonly
-                    :placeholder="$t('invite.inviteLink.placeholder')"
-                  />
-                </div>
-                <button class="btn-primary" @click="copyInviteLink">
+                <button class="btn-copy-link" @click="copyLinkByCode(code.code)">
                   <IconCopy class="btn-icon" />
                   {{ $t('invite.inviteLink.copyLink') }}
                 </button>
               </div>
             </div>
+
             
             <div class="share-buttons mt-3">
               <button class="btn-outline wechat-btn" @click="shareToWechat">
@@ -477,11 +417,6 @@
           <div class="records-table-wrapper">
             <template v-if="inviteRecords.length > 0">
             <table class="records-table">
-              <colgroup>
-                <col class="records-col-time">
-                <col class="records-col-status">
-                <col class="records-col-commission">
-              </colgroup>
               <thead>
                 <tr>
                   <th>{{ $t('invite.records.registerTime') }}</th>
@@ -501,8 +436,13 @@
                 </tr>
               </tbody>
             </table>
-            
-            <!-- 添加分页控件 -->
+            </template>
+            <div v-else class="empty-records">
+              <p>{{ $t('invite.records.noRecords') }}</p>
+            </div>
+          </div>
+          
+            <!-- 分页控件 - 在滚动区域外，保持居中 -->
             <div class="pagination-controls" v-if="totalPages > 1">
               <button 
                 class="page-btn prev-btn" 
@@ -586,11 +526,6 @@
                 </div>
               </div>
             </div>
-            </template>
-            <div v-else class="empty-records">
-              <p>{{ $t('invite.records.noRecords') }}</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -672,7 +607,6 @@ export default {
     const currencySymbol = ref('¥');
     
     const inviteCodes = ref([]);
-    const selectedCodeIndex = ref(0);
     
     const inviteStats = reactive({
       registeredUsers: 0,
@@ -763,10 +697,10 @@ export default {
     };
     
     const inviteLink = computed(() => {
-      if (inviteCodes.value.length === 0 || selectedCodeIndex.value >= inviteCodes.value.length) {
+      if (inviteCodes.value.length === 0) {
         return '';
       }
-      const code = inviteCodes.value[selectedCodeIndex.value].code;
+      const code = inviteCodes.value[0].code;
       
       if (INVITE_CONFIG.inviteLinkConfig && INVITE_CONFIG.inviteLinkConfig.linkMode === 'custom') {
         const customDomain = INVITE_CONFIG.inviteLinkConfig.customDomain;
@@ -794,36 +728,6 @@ export default {
       } finally {
         creatingCode.value = false;
       }
-    };
-    
-    const copyInviteLink = () => {
-      if (!inviteLink.value) return;
-      
-      navigator.clipboard.writeText(inviteLink.value)
-        .then(() => {
-          handleSuccess(t('invite.inviteLink.copied'));
-        })
-        .catch(() => {
-          const textarea = document.createElement('textarea');
-          textarea.value = inviteLink.value;
-          textarea.style.position = 'fixed';
-          document.body.appendChild(textarea);
-          textarea.focus();
-          textarea.select();
-          
-          try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-              handleSuccess(t('invite.inviteLink.copied'));
-            } else {
-              throw new Error('Copy failed');
-            }
-          } catch (err) {
-            handleError({ message: t('common.copyFailed') });
-          }
-          
-          document.body.removeChild(textarea);
-        });
     };
     
     const showConfirmModal = ref(false);
@@ -1012,18 +916,30 @@ export default {
       }
     };
     
-    const prevInviteCode = () => {
-      if (inviteCodes.value.length > 1) {
-        selectedCodeIndex.value = (selectedCodeIndex.value - 1 + inviteCodes.value.length) % inviteCodes.value.length;
-      }
+    const copyLinkByCode = (code) => {
+      const link = INVITE_CONFIG.inviteLinkConfig?.linkMode === 'custom'
+        ? `${(INVITE_CONFIG.inviteLinkConfig.customDomain).replace(/\/$/, '')}/#/register?code=${code}`
+        : `${window.location.origin}/#/register?code=${code}`;
+      
+      navigator.clipboard.writeText(link)
+        .then(() => handleSuccess(t('invite.inviteLink.copied')))
+        .catch(() => {
+          const textarea = document.createElement('textarea');
+          textarea.value = link;
+          textarea.style.position = 'fixed';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            handleSuccess(t('invite.inviteLink.copied'));
+          } catch (e) {
+            handleError(t('invite.inviteLink.copyFailed'));
+          }
+          document.body.removeChild(textarea);
+        });
     };
-    
-    const nextInviteCode = () => {
-      if (inviteCodes.value.length > 1) {
-        selectedCodeIndex.value = (selectedCodeIndex.value + 1) % inviteCodes.value.length;
-      }
-    };
-    
+
     const formatCodeDate = (timestamp) => {
       if (!timestamp) return '';
       const date = new Date(timestamp * 1000);
@@ -1306,13 +1222,12 @@ export default {
       loading,
       creatingCode,
       inviteCodes,
-      selectedCodeIndex,
       inviteStats,
       inviteRecords,
       inviteLink,
       currency,
       currencySymbol,
-      copyInviteLink,
+      copyLinkByCode,
       createInviteCode,
       shareToWechat,
       shareToTwitter,
@@ -1326,8 +1241,6 @@ export default {
       confirmModalMessage,
       confirmAction,
       cancelConfirmation,
-      prevInviteCode,
-      nextInviteCode,
       formatCodeDate,
       showTransferCardState,
       transferAmount,
@@ -1486,180 +1399,89 @@ export default {
   .invite-codes-wrapper {
     margin-bottom: 25px;
   }
-  
-  .invite-cards-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 30px 0 20px;
-    padding: 10px 0;
-  }
-  
-  .invite-cards-nav {
-    position: absolute;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: var(--card-bg-color);
-    border: 1px solid var(--border-color);
-    color: var(--theme-color);
-    cursor: pointer;
-    z-index: 5;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    
-    &:hover {
-      background-color: var(--theme-color);
-      color: white;
-      transform: scale(1.1);
-    }
-    
-    &.prev {
-      left: 0;
-    }
-    
-    &.next {
-      right: 0;
-    }
-  }
-  
-  .invite-cards-wrapper {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    perspective: 1000px;
-    overflow: hidden;
-  }
-  
-  .invite-cards {
-    position: relative;
-    width: 100%;
-    height: 140px;
-    display: flex;
-    justify-content: center;
-  }
-  
-  .invite-card {
-    position: absolute;
-    width: calc(100% - 40px);
-    height: 100%;
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-    opacity: 0;
-    backface-visibility: hidden;
-    transform: translateX(60%) scale(0.8) rotateY(-10deg);
-    pointer-events: none;
-    
-    &.active {
-      opacity: 1;
-      transform: translateX(0) scale(1) rotateY(0);
-      z-index: 3;
-      pointer-events: auto;
-    }
-    
-    &.prev {
-      opacity: 0.7;
-      transform: translateX(-60%) scale(0.8) rotateY(10deg);
-      z-index: 2;
-    }
-    
-    &.next {
-      opacity: 0.7;
-      transform: translateX(60%) scale(0.8) rotateY(-10deg);
-      z-index: 2;
-    }
-  }
-  
-  .invite-card-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    background: var(--theme-color);
-    color: white;
-    padding: 20px;
-    box-sizing: border-box;
+
+  .invite-codes-list {
     display: flex;
     flex-direction: column;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 10px rgba(var(--theme-color-rgb), 0.15);
-    
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0.05),
-        rgba(255, 255, 255, 0.02)
-      );
-      pointer-events: none;
-    }
-    
-    .card-shine {
-      display: none;
-    }
-    
-    .card-decoration {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(
-        to bottom right,
-        rgba(255, 255, 255, 0.05),
-        rgba(255, 255, 255, 0)
-      );
-      border-radius: 50%;
-      opacity: 0.4;
-      transform: translate(20%, 20%);
-      pointer-events: none;
-    }
-    
-    &:hover {
-      box-shadow: 0 3px 12px rgba(var(--theme-color-rgb), 0.25);
-      
-      .card-shine {
-        display: none;
-      }
-    }
+    gap: 10px;
+    margin-bottom: 24px;
   }
-  
-  .invite-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 2;
-  }
-  
-  .invite-card-title {
+
+  .invite-code-item {
     display: flex;
     align-items: center;
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    
-    .card-icon {
-      margin-right: 8px;
-      opacity: 0.9;
+    justify-content: space-between;
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: rgba(var(--theme-color-rgb), 0.3);
     }
   }
-  
-  .invite-card-body {
-    flex: 1;
+
+  .invite-code-info {
     display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .invite-code-label {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+  }
+
+  .invite-code-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+    font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+
+  .invite-code-date {
+    font-size: 11px;
+    color: var(--secondary-text-color);
+    opacity: 0.7;
+  }
+
+  .btn-copy-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+    background: transparent;
+    color: var(--theme-color);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(var(--theme-color-rgb), 0.08);
+      border-color: rgba(var(--theme-color-rgb), 0.4);
+    }
+
+    &:active {
+      background: rgba(var(--theme-color-rgb), 0.15);
+    }
+
+    .btn-icon {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  @media (max-width: 768px) {
     align-items: center;
     justify-content: center;
   }
@@ -2979,262 +2801,6 @@ export default {
 }
 
 
-.invite-cards-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 30px 0 20px;
-  padding: 10px 0;
-}
-
-.invite-cards-nav {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: var(--card-bg-color);
-  border: 1px solid var(--border-color);
-  color: var(--theme-color);
-  cursor: pointer;
-  z-index: 5;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  &:hover {
-    background-color: var(--theme-color);
-    color: white;
-    transform: scale(1.1);
-  }
-  
-  &.prev {
-    left: 0;
-  }
-  
-  &.next {
-    right: 0;
-  }
-}
-
-.invite-cards-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  perspective: 1000px;
-  overflow: hidden;
-}
-
-.invite-cards {
-  position: relative;
-  width: 100%;
-  height: 140px;
-  display: flex;
-  justify-content: center;
-}
-
-.invite-card {
-  position: absolute;
-  width: calc(100% - 40px);
-  height: 100%;
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-  opacity: 0;
-  backface-visibility: hidden;
-  transform: translateX(60%) scale(0.8) rotateY(-10deg);
-  pointer-events: none;
-  
-  &.active {
-    opacity: 1;
-    transform: translateX(0) scale(1) rotateY(0);
-    z-index: 3;
-    pointer-events: auto;
-  }
-  
-  &.prev {
-    opacity: 0.7;
-    transform: translateX(-60%) scale(0.8) rotateY(10deg);
-    z-index: 2;
-  }
-  
-  &.next {
-    opacity: 0.7;
-    transform: translateX(60%) scale(0.8) rotateY(-10deg);
-    z-index: 2;
-  }
-}
-
-.invite-card-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  background: var(--theme-color);
-  color: white;
-  padding: 20px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 10px rgba(var(--theme-color-rgb), 0.15);
-  
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.05),
-      rgba(255, 255, 255, 0.02)
-    );
-    pointer-events: none;
-  }
-  
-  .card-shine {
-    display: none;
-  }
-  
-  .card-decoration {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 120px;
-    height: 120px;
-    background: linear-gradient(
-      to bottom right,
-      rgba(255, 255, 255, 0.05),
-      rgba(255, 255, 255, 0)
-    );
-    border-radius: 50%;
-    opacity: 0.4;
-    transform: translate(20%, 20%);
-    pointer-events: none;
-  }
-  
-  &:hover {
-    box-shadow: 0 3px 12px rgba(var(--theme-color-rgb), 0.25);
-    
-    .card-shine {
-      display: none;
-    }
-  }
-}
-
-.invite-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  position: relative;
-  z-index: 2;
-}
-
-.invite-card-title {
-  display: flex;
-  align-items: center;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  
-  .card-icon {
-    margin-right: 8px;
-    opacity: 0.9;
-  }
-}
-
-.invite-card-body {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.invite-code-display {
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 10px 16px;
-  display: flex;
-  justify-content: center;
-  position: relative;
-  z-index: 2;
-  
-  &::before, &::after {
-    display: none;
-  }
-  
-  .code-char {
-    display: inline-block;
-    animation: fadeIn 0.4s both;
-    animation-delay: calc(var(--i, 0) * 0.04s);
-    
-    @for $i from 0 through 10 {
-      &:nth-child(#{$i + 1}) {
-        --i: #{$i};
-      }
-    }
-  }
-}
-
-.invite-card-footer {
-  margin-top: auto;
-  padding-top: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  position: relative;
-  z-index: 2;
-  
-  .card-label {
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0.8;
-    margin-top: 8px;
-  }
-  
-  .invite-card-date {
-    font-size: 11px;
-    opacity: 0.7;
-  }
-}
-
-
-.invite-card-enter-active,
-.invite-card-leave-active {
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.invite-card-enter-from {
-  opacity: 0;
-  transform: translateX(100%) scale(0.8);
-}
-
-.invite-card-leave-to {
-  opacity: 0;
-  transform: translateX(-100%) scale(0.8);
-}
-
-@keyframes fadeIn {
-  from { 
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
 .modal-enter-active,
 .modal-leave-active {
   transition: all 0.3s ease;
@@ -3440,10 +3006,15 @@ export default {
     @media (max-width: 768px) {
       width: 100%;
       margin-top: 10px;
-      
+      flex-wrap: wrap;
+
       .btn-primary {
         width: 100%;
         justify-content: center;
+        min-width: 0;
+        padding: 0 12px;
+        font-size: 13px;
+        height: 40px;
       }
     }
   }
@@ -3894,22 +3465,22 @@ export default {
   justify-content: center;
   margin-top: 20px;
   padding: 10px 0;
-  gap: 6px;
-  
+  gap: 4px;
+
   .page-size-container {
     margin-left: 15px;
     display: flex;
     align-items: center;
   }
-  
+
   .page-size-selector {
     width: 70px;
     height: 36px;
     position: relative;
-    z-index: 3000; 
+    z-index: 3000;
     display: inline-flex;
   }
-  
+
   .page-btn {
     display: flex;
     align-items: center;
@@ -3923,13 +3494,13 @@ export default {
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
-    
+
     &:hover:not(:disabled) {
       border-color: var(--theme-color);
       color: var(--theme-color);
       background-color: rgba(var(--theme-color-rgb), 0.05);
     }
-    
+
     &.active {
       color: var(--theme-color);
       border-color: var(--theme-color);
@@ -3937,19 +3508,19 @@ export default {
       box-shadow: 0 2px 6px rgba(var(--theme-color-rgb), 0.2);
       background-color: rgba(var(--theme-color-rgb), 0.05);
     }
-    
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
   }
-  
+
   .page-numbers {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
   }
-  
+
   .page-ellipsis {
     width: 24px;
     display: flex;
@@ -3959,10 +3530,6 @@ export default {
     font-size: 12px;
     user-select: none;
   }
-  
-  .prev-btn, .next-btn {
-    background-color: rgba(var(--theme-color-rgb), 0.05);
-  }
 }
 
 
@@ -3970,20 +3537,20 @@ export default {
   .pagination-controls {
     flex-wrap: nowrap;
     justify-content: center;
-    gap: 8px;
-    
+    gap: 4px;
+
     .page-btn {
       width: 32px;
       height: 32px;
       font-size: 13px;
     }
-    
+
     .page-numbers {
       gap: 4px;
       flex-wrap: wrap;
       justify-content: center;
     }
-    
+
     .page-ellipsis {
       width: 16px;
     }

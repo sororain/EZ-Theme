@@ -132,7 +132,7 @@
 
             <div class="option-icon">
 
-              <IconCircleCheck v-if="selectedFilter === filter.value" />
+              <svg v-if="selectedFilter === filter.value" class="option-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
 
               <IconCircle v-else />
 
@@ -335,7 +335,6 @@
                 >
 
                   <IconCheck v-if="feature.support" class="feature-icon enabled" />
-
                   <IconX v-else class="feature-icon disabled" />
 
                   <span :class="{ 'disabled-text': !feature.support }">{{ feature.feature }}</span>
@@ -442,9 +441,7 @@ import {
 
   IconInfoCircle,
 
-  IconCircle,
-
-  IconCircleCheck
+  IconCircle
 
 } from '@tabler/icons-vue';
 
@@ -477,8 +474,6 @@ export default {
     IconInfoCircle,
 
     IconCircle,
-
-    IconCircleCheck,
 
     ShopPopup
 
@@ -2224,7 +2219,7 @@ export default {
 
         display: flex;
 
-        align-items: flex-start; // 改为 flex-start 以便长文本时对齐更好
+        align-items: flex-start;
 
         margin-bottom: 12px;
 
@@ -2236,15 +2231,15 @@ export default {
 
           height: 20px;
 
-          min-width: 20px; // 添加最小宽度防止收缩
+          min-width: 20px;
 
-          min-height: 20px; // 添加最小高度防止收缩
+          min-height: 20px;
 
           margin-right: 8px;
 
-          flex-shrink: 0; // 防止图标被压缩
+          flex-shrink: 0;
 
-          margin-top: 1px; // 微调垂直对齐
+          margin-top: 1px;
 
           
 
@@ -2272,13 +2267,13 @@ export default {
 
           color: var(--text-color);
 
-          line-height: 1.5; // 添加行高改善可读性
+          line-height: 1.5;
 
-          word-wrap: break-word; // 允许长单词换行
+          word-wrap: break-word;
 
-          overflow-wrap: break-word; // 更好的换行支持
+          overflow-wrap: break-word;
 
-          flex: 1; // 占据剩余空间
+          flex: 1;
 
           
 

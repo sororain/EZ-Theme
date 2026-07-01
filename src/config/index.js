@@ -15,36 +15,18 @@ export const config  = {
     // =======================================================
 
     // API配置
-    // 可使用以下选项来配置API基础URL:
-    // 1. 静态URL: 直接指定API基础URL 末尾要加 /api/v1 !!!!!!!!!!!!!!! 除非你自己改过路由要不然别不加
-    // 2. 自动获取: 从当前域名自动生成API基础URL
+    // 基础请求地址，无需加 /api/v1，系统会自动拼接
     API_CONFIG: {
-        // API URL获取方式: 'static'=使用静态URL, 'auto'=自动从当前域名获取
-        urlMode: 'static',
       
         // 是否展示后端联通性检测（false=仅后台静默检测，不跳转验证页）
         showCheckBackend: false,
       
-        // 静态URL模式下的基础URL (urlMode = 'static'时使用)
-        // 支持字符串形式(单个API地址)或数组形式(多个备选API地址)
-        // 多个地址时，会按顺序检测可用性，并使用第一个可用的地址
+        // API地址（支持字符串或数组，多个地址时自动竞速选最快）
+        // 使用base64编码进行轻量混淆，系统运行时会自动解码
         staticBaseUrl: [
-            'https://w5x8mu2a9943r.ezdemo.xyz/api/v1',
-            'https://skhsn6q4pnv95.ezdemo.xyz/api/v1',
-            'https://gy1v06omopzc8.ezdemo.xyz/api/v1'
+            'aHR0cHM6Ly9naXRodWIuY29t',
         ],
       
-        // 自动获取模式配置 (urlMode = 'auto'时使用)
-        autoConfig: {
-            // 是否使用相同协议 (http/https)
-            useSameProtocol: true,
-
-            // 是否拼接API路径
-            appendApiPath: true,
-
-            // API路径
-            apiPath: '/api/v1'
-        }
     },
 
     // 是否启用中间件代理API请求
@@ -84,12 +66,6 @@ export const config  = {
         // 例如：'testlandingpage.html'
         // 如果为空则不启用自定义landing页面
         customLandingPage: ''
-    },
-
-    // 右键菜单配置
-    CONTEXT_MENU_CONFIG: {
-        // 刷新按钮文案（留空则使用当前语言的默认文案）
-        refreshText: ''
     },
 
     // 默认语言和主题配置

@@ -137,7 +137,7 @@ request.interceptors.response.use(
     try {
       const res = response.data;
       
-      if (res && res.message === '未登录或登陆已过期') {
+      if (res && res.message === '未登录或登录已过期') {
         console.log('检测到登录已过期，执行登出操作');
         const { forceLogout } = require('./auth');
         forceLogout();

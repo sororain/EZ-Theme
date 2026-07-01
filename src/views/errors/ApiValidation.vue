@@ -366,7 +366,7 @@ export default {
 
       try {
 
-        const url = `${baseUrl}/guest/comm/config`;
+        const url = `${baseUrl}/api/v1/guest/comm/config`;
 
         
 

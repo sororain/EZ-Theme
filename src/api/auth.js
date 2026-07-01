@@ -571,7 +571,7 @@ export const checkUserLoginStatus = async () => {
   } catch (error) {
     console.error('检查登录状态失败:', error);
     
-    if (error.response && error.response.data && error.response.data.message === '未登录或登陆已过期') {
+    if (error.response && error.response.data && error.response.data.message === '未登录或登录已过期') {
       forceLogout();
       
       const currentRoute = window.location.pathname;

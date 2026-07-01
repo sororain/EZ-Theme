@@ -179,7 +179,7 @@ export default {
     dashboard: {
         welcome: 'Welcome Back',
         welcomeDesc: 'View your services and usage',
-        siteAnnouncement: 'Site Announcements',
+        siteAnnouncement: 'Announcement Center',
         subscriptionInfo: 'Subscription Info',
         planName: 'Plan Name',
         expiryDate: 'Expiry Date',
